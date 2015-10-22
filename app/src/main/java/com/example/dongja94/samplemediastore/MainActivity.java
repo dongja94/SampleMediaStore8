@@ -12,15 +12,20 @@ import android.support.v4.content.Loader;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.SparseBooleanArray;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.nostra13.universalimageloader.core.ImageLoader;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
@@ -51,12 +56,12 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         gridView = (GridView)findViewById(R.id.gridView);
         String[] from = {MediaStore.Images.Media.DISPLAY_NAME, MediaStore.Images.Media.DATA};
         int[] to = {R.id.text_name, R.id.image_icon};
-        mAdapter = new SimpleCursorAdapter(this, R.layout.view_item, null, from, to, 0);
+        mAdapter = new SimpleCursorAdapter(this, R.layout.check_item_layout, null, from, to, 0);
         mAdapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
             @Override
             public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
                 if (columnIndex == dataColumnIndex) {
-                    ImageView iv = (ImageView)view;
+                    ImageView iv = (ImageView) view;
                     String path = cursor.getString(columnIndex);
 //                    BitmapFactory.Options opts = new BitmapFactory.Options();
 //                    opts.inSampleSize = 4;
@@ -70,7 +75,27 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             }
         });
         gridView.setAdapter(mAdapter);
+        gridView.setChoiceMode(GridView.CHOICE_MODE_MULTIPLE);
         getSupportLoaderManager().initLoader(0, null, this);
+
+        Button btn = (Button)findViewById(R.id.btn_select);
+        btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SparseBooleanArray array = gridView.getCheckedItemPositions();
+                List<String> pathList = new ArrayList<String>();
+                for (int index = 0; index < array.size(); index++) {
+                    int position = array.keyAt(index);
+                    if (array.get(position)) {
+                        Cursor c = (Cursor)gridView.getItemAtPosition(position);
+                        String path = c.getString(c.getColumnIndex(MediaStore.Images.Media.DATA));
+                        pathList.add(path);
+                    }
+                }
+
+                Toast.makeText(MainActivity.this, "list : " + pathList.toString(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Override
